@@ -10,6 +10,7 @@ import io.micrometer.prometheus.PrometheusMeterRegistry;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Objects;
 
@@ -27,6 +28,10 @@ public class Main {
         int port = Objects.equals(envPort, "") ? Integer.parseInt(envPort) : 9999;
 
         try {
+            InetAddress addr;
+            addr = InetAddress.getLocalHost();
+            byte[] hostname = addr.getHostName().getBytes();
+
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
             server.createContext("/metrics", httpExchange -> {
                 String response = prometheusRegistry.scrape();
@@ -40,14 +45,13 @@ public class Main {
             // trigger full gc
             server.createContext("/fujic", httpExchange -> {
                 System.gc();
-                httpExchange.sendResponseHeaders(200, 1);
+                httpExchange.sendResponseHeaders(200, hostname.length);
                 try (OutputStream os = httpExchange.getResponseBody()) {
-                    os.write(65);
+                    os.write(hostname);
                 }
             });
-
             new Thread(server::start).start();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
