@@ -1,0 +1,2 @@
+docker buildx build --builder=custom-builder --platform=linux/arm64,linux/amd64 -f ./Dockerfile . -t terrywong002/simple-http-jvm-metrics:latest --output=type=oci,dest=dist/oci/simple-http-jvm-metrics.tar --provenance=false --progress=plain
+docker run --rm -v "./dist/oci/:/tmp/oci/" -v "$HOME/.docker/config.json:/tmp/auth/config.json" quay.io/skopeo/stable:v1.12.0 copy --authfile="/tmp/auth/config.json" --multi-arch=all -f=v2s2 oci-archive:/tmp/oci/simple-http-jvm-metrics.tar docker://terrywong002/simple-http-jvm-metrics:latest
